@@ -77,13 +77,11 @@ def get_map(selected_file, selection):
             lon=lons,
             text=['text'],
             type="scattermapbox",
-            customdata=['custom'],
             # https://plot.ly/python-api-reference/generated/plotly.graph_objects.Scattermapbox.html
             # fill="none", # none, toself, (only toself is working
             marker=dict(
                 color='blue'
-            ),
-            hovertemplate='Station: %{text} <extra></extra>'
+                ),
             )
         )
 
@@ -106,8 +104,8 @@ def get_map(selected_file, selection):
                 pitch=0,
                 zoom=3,
             ),
-            height=1000,
-            width=1500,
+            height=600,
+            width=1000,
             autosize=True,
         ))
 

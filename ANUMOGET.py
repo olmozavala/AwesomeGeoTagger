@@ -3,7 +3,7 @@ from config.params import ANUMOGET, DataCols
 from layout.body import get_layout
 from proc import get_map, get_dates_dropdown
 
-from inout.reader import read_all_files, match_files_dates
+from inout.reader import read_all_files, match_files_dates, read_ts_db
 from datetime import date, datetime, timedelta
 import pandas as pd
 import numpy as np
@@ -25,14 +25,17 @@ styles = {
 
 config = get_config()
 input_folder = config[ANUMOGET.input_folder]
+ts_db_file_name = config[ANUMOGET.ts_db_file_name]
 output_folder = config[ANUMOGET.output_folder]
 
 
 print("Reading data....")
 files = read_all_files(input_folder)
 data = [['10,9','Cat 4', '']]
-db = pd.DataFrame(data, columns=[DataCols.center.value, DataCols.category.value, DataCols.netcdf_file.value],
-                  index=[datetime(1981, 1, 1, 0, 0, 0)])
+
+db = read_ts_db(ts_db_file_name)
+# db = pd.DataFrame(data, columns=[DataCols.center.value, DataCols.category.value, DataCols.netcdf_file.value],
+#                   index=[datetime(1981, 1, 1, 0, 0, 0)])
 
 # Shuffle dates
 # Match dates to files
@@ -69,5 +72,5 @@ def display_figure(n_clicks, lats_lons):
 
 
 if __name__ == '__main__':
-    app.run_server(debug=True, port=8051)
-    # app.run_server(debug=False, port=8053, host='146.201.212.214')
+    # app.run_server(debug=True, port=8051)
+    app.run_server(debug=False, port=8053, host='146.201.212.214')

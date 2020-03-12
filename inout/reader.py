@@ -1,4 +1,5 @@
 import xarray as xr
+import netCDF4 as nc
 from os.path import join
 import os
 import re
@@ -28,7 +29,14 @@ def match_files_dates(files, db):
             if len(m) > 0:
                 db.loc[c_date_orig][DataCols.netcdf_file.value] = c_file
 
-    print(db)
-    return db
+    newdb = db[db[DataCols.netcdf_file.value] != '']
+    print(newdb)
+    return newdb
 
 
+def read_ts_db(file_name):
+    df = pd.read_csv(file_name, header=0, index_col=0, parse_dates=True)
+    print(df)
+    df[DataCols.center.value] = df['lat'].astype('str') + ',' + df['lon'].astype('str')
+    df[DataCols.netcdf_file.value] = ''
+    return df

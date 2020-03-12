@@ -40,23 +40,25 @@ temp_db = read_ts_db(ts_db_file_name, BBOX)
 # Match dates to files
 db = match_files_dates(files, temp_db)
 
-app = get_layout('TITLE')
-
+app = get_layout('Awesome NUmerical MOdel Tagger (ANUMOGET)', db)
 
 @app.callback(
-    [Output('id-map', 'figure'),
+    [Output('id-map-u', 'figure'),
+     Output('id-map-v', 'figure'),
+     Output('id-map-mag', 'figure'),
      Output('text_area', 'value')],
     [Input('dropdown', 'value'),
-     Input('id-map', 'selectedData'),
+     Input('id-map-mag', 'selectedData'),
      ])
 def display_map(drop_value, selected_area):
     if not(drop_value is None or drop_value == ''):
-        print(drop_value)
-        map_fig, lats_lons = get_map(drop_value, selected_area, db)
+        map_fig_u, lats_lons = get_map(drop_value, selected_area, db, 'U10')
+        map_fig_v, lats_lons = get_map(drop_value, selected_area, db, 'V10')
+        map_fig_mag, lats_lons = get_map(drop_value, selected_area, db, 'UV-MAG')
         if selected_area is None:
-            return map_fig, 'Please make a selection'
+            return map_fig_u, map_fig_v, map_fig_mag, 'Please make a selection'
         else:
-            return map_fig, lats_lons
+            return map_fig_u, map_fig_v, map_fig_mag, lats_lons
 
 @app.callback(
     [Output('dropdown', 'options'),
@@ -66,12 +68,11 @@ def display_map(drop_value, selected_area):
      )
 def save_label(n_clicks, lats_lons):
     # READ/UPDATE DATABASE
-    print(lats_lons)
     dropdown_options = get_dates_dropdown(db)
     value = dropdown_options[0]['value']
     return dropdown_options, value
 
 
 if __name__ == '__main__':
-    app.run_server(debug=True, port=8051)
-    # app.run_server(debug=False, port=8053, host='146.201.212.214')
+    # app.run_server(debug=True, port=8051)
+    app.run_server(debug=False, port=8053, host='146.201.212.214')

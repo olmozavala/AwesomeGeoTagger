@@ -3,8 +3,9 @@ import dash_core_components as dcc
 import dash_html_components as html
 import dash_bootstrap_components as dbc
 
+from proc import get_dates_dropdown
 
-def get_layout(title):
+def get_layout(title, db):
     navbar = dbc.NavbarSimple(
         children=[
             dbc.NavItem(dbc.NavLink("Link", href="#")),
@@ -29,25 +30,34 @@ def get_layout(title):
         # Global information
         dbc.Row([
             dbc.Col([
-                html.H1("Awesome NUmerical MOdel Tagger (ANUMOGET)")
-                    ], width=12)
-            ]),
+                dcc.Graph(
+                    id="id-map-mag",
+                    figure={}
+                ),
+            ], width=12),
+        ]),
         dbc.Row([
             dbc.Col([
                 dcc.Dropdown(
                     id='dropdown',
-                    options=[],
-                    value=''
+                    options=get_dates_dropdown(db),
+                    value=get_dates_dropdown(db)[0]['value']
                 ),
-                ], width=6)
-            ]),
+            ], width=6)
+        ]),
         dbc.Row([
             dbc.Col([
                 dcc.Graph(
-                    id="id-map",
+                    id="id-map-u",
                     figure={}
                 ),
-            ], width=8)
+            ], width=6),
+            dbc.Col([
+                dcc.Graph(
+                    id="id-map-v",
+                    figure={}
+                ),
+            ], width=6)
         ]),
         dbc.Row([
             dbc.Col([

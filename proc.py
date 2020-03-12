@@ -1,13 +1,12 @@
 import xarray as xr
 from colorcet import *
 import datashader.transfer_functions as tf
-import dash_core_components as dcc
 from config.params import DataCols
-import pandas as pd
+import numpy as np
 
 date_format_ext = '%Y-%m-%dT%H:%M:%S'
 
-def get_map(id, selection, db):
+def get_map(id, selection, db, field):
     """
     This function will generate the proper dash map with the selected
     date and, if the user has already draw something, it will add the points.
@@ -17,8 +16,8 @@ def get_map(id, selection, db):
     """
     # print(selection)
 
-    selected_file = db.iloc[id][DataCols.netcdf_file.value]
-    coords_file = db.iloc[id][DataCols.cords_file.value]
+    selected_file = db.loc[id][DataCols.netcdf_file.value]
+    coords_file = db.loc[id][DataCols.cords_file.value]
 
     agg = xr.open_dataset(selected_file, decode_times=False)
     cur_xr_ds_coords = xr.open_dataset(coords_file, decode_times=False)
@@ -37,9 +36,13 @@ def get_map(id, selection, db):
                    [LON[-1], LAT[0]],
                    [LON[0], LAT[0]]]
 
+    if field == 'UV-MAG':
+        field_values = np.sqrt(agg['U10'].values**2 + agg['V10'].values**2)
+    else:
+        field_values = agg[field].values
     ds = xr.Dataset(
         {
-            "SST": (("time", "lat", "lon"), agg['SST'].values.astype(int))
+            "displayed_var": (("time", "lat", "lon"), field_values)
         },
         {"time": agg['Time'].values,
          "lat": cur_xr_ds_coords['XLAT'].values[0,:,0],
@@ -47,12 +50,12 @@ def get_map(id, selection, db):
          },
     )
 
-    hour = int(db.iloc[id][DataCols.time.value].strftime('%H'))
+    hour = int(db.loc[id][DataCols.time.value].strftime('%H'))
 
-    img = tf.shade(ds['SST'][hour,:,:], cmap=bmy, alpha=150).to_pil()
+    img = tf.shade(ds['displayed_var'][hour,:,:], cmap=bgy, alpha=150).to_pil()
 
     center = [24, -94]
-    center_storm = [db.iloc[id]['lat'], db.iloc[id]['lon']]
+    center_storm = [db.loc[id]['lat'], db.loc[id]['lon']]
     data = [
         dict(
             lat=[center_storm[0]],
@@ -63,7 +66,7 @@ def get_map(id, selection, db):
             # https://plot.ly/python-api-reference/generated/plotly.graph_objects.Scattermapbox.html
             # fill="none", # none, toself, (only toself is working
             marker=dict(
-                color='green'
+                color='red'
             ),
             hovertemplate='Station: %{text} <extra></extra>'
         )
@@ -85,7 +88,7 @@ def get_map(id, selection, db):
             # https://plot.ly/python-api-reference/generated/plotly.graph_objects.Scattermapbox.html
             # fill="none", # none, toself, (only toself is working
             marker=dict(
-                color='blue'
+                color='black'
                 ),
             )
         )
@@ -112,17 +115,18 @@ def get_map(id, selection, db):
             height=600,
             width=1000,
             autosize=True,
+            title=field
         ))
 
     return figure, lats_lons
 
 def get_dates_dropdown(db):
     dropdown_opts = []
-    all_index = db.index
+    all_index = db.index.values
     for c_index in all_index:
         category = db.loc[c_index][DataCols.category.value]
-        c_date = db.iloc[c_index][DataCols.time.value].strftime(date_format_ext)
-        name = db.iloc[c_index]['name']
+        c_date = db.loc[c_index][DataCols.time.value].strftime(date_format_ext)
+        name = db.loc[c_index]['name']
         dropdown_opts.append({'label': F'{name} {category} {c_date}',
                               'value': c_index
                               })

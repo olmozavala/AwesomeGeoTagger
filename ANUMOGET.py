@@ -31,15 +31,14 @@ output_folder = config[ANUMOGET.output_folder]
 
 print("Reading data....")
 files = read_all_files(input_folder)
-data = [['10,9','Cat 4', '']]
 
-db = read_ts_db(ts_db_file_name)
-# db = pd.DataFrame(data, columns=[DataCols.center.value, DataCols.category.value, DataCols.netcdf_file.value],
-#                   index=[datetime(1981, 1, 1, 0, 0, 0)])
+# TODO restrict to BBOX, so that we only get the TS on the area of interest
+BBOX = [4, -123.5, 38.5, -75]
+temp_db = read_ts_db(ts_db_file_name, BBOX)
 
 # Shuffle dates
 # Match dates to files
-db_full = match_files_dates(files, db)
+db = match_files_dates(files, temp_db)
 
 app = get_layout('TITLE')
 
@@ -50,27 +49,29 @@ app = get_layout('TITLE')
     [Input('dropdown', 'value'),
      Input('id-map', 'selectedData'),
      ])
-def display_figure(selected_file, selected_area):
-    map_fig, lats_lons = get_map(selected_file, selected_area)
-    if selected_area is None:
-        return map_fig, 'Please make a selection'
-    else:
-        return map_fig, lats_lons
+def display_map(drop_value, selected_area):
+    if not(drop_value is None or drop_value == ''):
+        print(drop_value)
+        map_fig, lats_lons = get_map(drop_value, selected_area, db)
+        if selected_area is None:
+            return map_fig, 'Please make a selection'
+        else:
+            return map_fig, lats_lons
 
 @app.callback(
     [Output('dropdown', 'options'),
-     Output('dropdown', 'value')],
+    Output('dropdown', 'value')],
     [Input('button', 'n_clicks')],
     [State('text_area', 'value')],
      )
-def display_figure(n_clicks, lats_lons):
+def save_label(n_clicks, lats_lons):
     # READ/UPDATE DATABASE
     print(lats_lons)
-    dropdown_options = get_dates_dropdown(db_full)
+    dropdown_options = get_dates_dropdown(db)
     value = dropdown_options[0]['value']
     return dropdown_options, value
 
 
 if __name__ == '__main__':
-    # app.run_server(debug=True, port=8051)
-    app.run_server(debug=False, port=8053, host='146.201.212.214')
+    app.run_server(debug=True, port=8051)
+    # app.run_server(debug=False, port=8053, host='146.201.212.214')

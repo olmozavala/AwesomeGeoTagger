@@ -7,7 +7,7 @@ import pandas as pd
 
 date_format_ext = '%Y-%m-%dT%H:%M:%S'
 
-def get_map(selected_file, selection):
+def get_map(id, selection, db):
     """
     This function will generate the proper dash map with the selected
     date and, if the user has already draw something, it will add the points.
@@ -17,8 +17,11 @@ def get_map(selected_file, selection):
     """
     # print(selection)
 
-    agg = xr.open_dataset(selected_file)
-    cur_xr_ds_coords = xr.open_dataset(selected_file.replace('c1h','c15d'))
+    selected_file = db.iloc[id][DataCols.netcdf_file.value]
+    coords_file = db.iloc[id][DataCols.cords_file.value]
+
+    agg = xr.open_dataset(selected_file, decode_times=False)
+    cur_xr_ds_coords = xr.open_dataset(coords_file, decode_times=False)
     # agg is an xarray object, see http://xarray.pydata.org/en/stable/ for more details
     LAT = cur_xr_ds_coords.XLAT.values[0, :, 0]
     LON = cur_xr_ds_coords.XLONG.values[0, 0, :]
@@ -44,10 +47,12 @@ def get_map(selected_file, selection):
          },
     )
 
-    img = tf.shade(ds['SST'][0,:,:], cmap=bmy, alpha=150).to_pil()
+    hour = int(db.iloc[id][DataCols.time.value].strftime('%H'))
+
+    img = tf.shade(ds['SST'][hour,:,:], cmap=bmy, alpha=150).to_pil()
 
     center = [24, -94]
-    center_storm = [24, -94]
+    center_storm = [db.iloc[id]['lat'], db.iloc[id]['lon']]
     data = [
         dict(
             lat=[center_storm[0]],
@@ -116,8 +121,10 @@ def get_dates_dropdown(db):
     all_index = db.index
     for c_index in all_index:
         category = db.loc[c_index][DataCols.category.value]
-        c_date = pd.to_datetime(c_index).strftime(date_format_ext)
-        dropdown_opts.append({'label': F'{category} {c_date}',
-                              'value': db.loc[c_index][DataCols.netcdf_file.value]})
+        c_date = db.iloc[c_index][DataCols.time.value].strftime(date_format_ext)
+        name = db.iloc[c_index]['name']
+        dropdown_opts.append({'label': F'{name} {category} {c_date}',
+                              'value': c_index
+                              })
 
     return dropdown_opts

@@ -10,4 +10,6 @@ class ANUMOGET(Enum):
 class DataCols(Enum):
     category = 'category'
     netcdf_file = 'file_name'
+    cords_file = 'coords_file_name'
     center = 'location'
+    time = 'time'

@@ -20,6 +20,8 @@ def get_map(id, selection, db, field):
     coords_file = db.loc[id][DataCols.cords_file.value]
 
     agg = xr.open_dataset(selected_file, decode_times=False)
+    # print(agg.variables)
+
     cur_xr_ds_coords = xr.open_dataset(coords_file, decode_times=False)
     # agg is an xarray object, see http://xarray.pydata.org/en/stable/ for more details
     LAT = cur_xr_ds_coords.XLAT.values[0, :, 0]

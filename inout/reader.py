@@ -15,7 +15,8 @@ def match_files_dates(files, db):
     for i in ts_id:
         c_date_orig = db.loc[i][DataCols.time.value]
         c_date_orig = pd.to_datetime(c_date_orig)
-        c_date_fixed = c_date_orig + timedelta(hours=-6)
+        # c_date_fixed = c_date_orig + timedelta(hours=-6)
+        c_date_fixed = c_date_orig + timedelta(hours=0)
         c_year = c_date_fixed.year
         c_month = c_date_fixed.month
         c_day = c_date_fixed.day

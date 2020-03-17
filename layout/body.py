@@ -34,7 +34,13 @@ def get_layout(title, db):
                     id="id-map-mag",
                     figure={}
                 ),
-            ], width=12),
+            ], width=6),
+            dbc.Col([
+                dcc.Graph(
+                    id="id-map-psfc",
+                    figure={}
+                ),
+            ], width=6),
         ]),
         dbc.Row([
             dbc.Col([

@@ -46,6 +46,7 @@ app = get_layout('Awesome NUmerical MOdel Tagger (ANUMOGET)', db)
     [Output('id-map-u', 'figure'),
      Output('id-map-v', 'figure'),
      Output('id-map-mag', 'figure'),
+     Output('id-map-psfc', 'figure'),
      Output('text_area', 'value')],
     [Input('dropdown', 'value'),
      Input('id-map-mag', 'selectedData'),
@@ -55,10 +56,11 @@ def display_map(drop_value, selected_area):
         map_fig_u, lats_lons = get_map(drop_value, selected_area, db, 'U10')
         map_fig_v, lats_lons = get_map(drop_value, selected_area, db, 'V10')
         map_fig_mag, lats_lons = get_map(drop_value, selected_area, db, 'UV-MAG')
+        map_fig_psfc, lats_lons = get_map(drop_value, selected_area, db, 'PSFC')
         if selected_area is None:
-            return map_fig_u, map_fig_v, map_fig_mag, 'Please make a selection'
+            return map_fig_u, map_fig_v, map_fig_mag, map_fig_psfc, 'Please make a selection'
         else:
-            return map_fig_u, map_fig_v, map_fig_mag, lats_lons
+            return map_fig_u, map_fig_v, map_fig_mag, map_fig_psfc, lats_lons
 
 @app.callback(
     [Output('dropdown', 'options'),
@@ -74,5 +76,5 @@ def save_label(n_clicks, lats_lons):
 
 
 if __name__ == '__main__':
-    # app.run_server(debug=True, port=8051)
-    app.run_server(debug=False, port=8053, host='146.201.212.214')
+    app.run_server(debug=True, port=8051)
+    # app.run_server(debug=False, port=8053, host='146.201.212.214')

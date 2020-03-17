@@ -38,6 +38,7 @@ temp_db = read_ts_db(ts_db_file_name, BBOX)
 
 # Shuffle dates
 # Match dates to files
+# http://www.meteo.unican.es/wiki/cordexwrf/OutputVariables
 db = match_files_dates(files, temp_db)
 
 app = get_layout('Awesome NUmerical MOdel Tagger (ANUMOGET)', db)
@@ -50,14 +51,43 @@ app = get_layout('Awesome NUmerical MOdel Tagger (ANUMOGET)', db)
      Output('text_area', 'value')],
     [Input('dropdown', 'value'),
      Input('id-map-mag', 'selectedData'),
+     Input('id-map-psfc', 'selectedData'),
+     Input('id-map-u', 'selectedData'),
+     Input('id-map-v', 'selectedData'),
+     ],
+    [State('id-map-mag', 'figure'),
+     State('id-map-psfc', 'figure'),
+     State('id-map-u', 'figure'),
+     State('id-map-v', 'figure'),
      ])
-def display_map(drop_value, selected_area):
+def display_map(drop_value, selected_area_map1, selected_area_map2, selected_area_map3, selected_area_map4,
+                    map_state_map1, map_state_map2, map_state_map3, map_state_map4):
     if not(drop_value is None or drop_value == ''):
-        map_fig_u, lats_lons = get_map(drop_value, selected_area, db, 'U10')
-        map_fig_v, lats_lons = get_map(drop_value, selected_area, db, 'V10')
-        map_fig_mag, lats_lons = get_map(drop_value, selected_area, db, 'UV-MAG')
-        map_fig_psfc, lats_lons = get_map(drop_value, selected_area, db, 'PSFC')
-        if selected_area is None:
+        np_selected_area = np.array([selected_area_map1, selected_area_map2, selected_area_map3, selected_area_map4])
+        np_state = np.array([map_state_map1, map_state_map2, map_state_map3, map_state_map4])
+        selection = [x is None for x in np_selected_area]
+        all_none = np.all(selection)
+        if not(all_none):
+            selected_area = np_selected_area[np.logical_not(selection)][0]
+        else:
+            selected_area = None
+
+        # Updating zoom and center
+        if not (all_none):
+            map_state = np_state[np.logical_not(selection)][0]
+            center_dash = map_state['layout']['mapbox']['center']
+            center = [center_dash['lon'], center_dash['lat']]
+            zoom = map_state['layout']['mapbox']['zoom']
+        else:
+            center = [-94, 24]
+            zoom = 3
+
+        print(F'CENTER: {center}    ZOOOM: {zoom}')
+        map_fig_u, lats_lons = get_map(drop_value, selected_area, db, 'Q2', center=center, zoom=zoom)
+        map_fig_v, lats_lons = get_map(drop_value, selected_area, db, 'RAINC', center=center, zoom=zoom)
+        map_fig_mag, lats_lons = get_map(drop_value, selected_area, db, 'UV-MAG', center=center, zoom=zoom)
+        map_fig_psfc, lats_lons = get_map(drop_value, selected_area, db, 'PSFC', center=center, zoom=zoom)
+        if all_none:
             return map_fig_u, map_fig_v, map_fig_mag, map_fig_psfc, 'Please make a selection'
         else:
             return map_fig_u, map_fig_v, map_fig_mag, map_fig_psfc, lats_lons
@@ -76,5 +106,6 @@ def save_label(n_clicks, lats_lons):
 
 
 if __name__ == '__main__':
-    app.run_server(debug=True, port=8051)
-    # app.run_server(debug=False, port=8053, host='146.201.212.214')
+    # app.run_server(debug=False, port=8053, host='132.248.8.98:8053')
+    # app.run_server(debug=True, port=8051)
+    app.run_server(debug=False, port=8053, host='146.201.212.214')

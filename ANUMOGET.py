@@ -30,7 +30,8 @@ output_folder = config[ANUMOGET.output_folder]
 
 
 print("Reading data....")
-files = read_all_files(input_folder)
+files = np.array(read_all_files(input_folder))
+files.sort()
 
 # TODO restrict to BBOX, so that we only get the TS on the area of interest
 BBOX = [4, -123.5, 38.5, -75]
@@ -107,5 +108,5 @@ def save_label(n_clicks, lats_lons):
 
 if __name__ == '__main__':
     # app.run_server(debug=False, port=8053, host='132.248.8.98:8053')
-    # app.run_server(debug=True, port=8051)
-    app.run_server(debug=False, port=8053, host='146.201.212.214')
+    app.run_server(debug=True, port=8051)
+    # app.run_server(debug=False, port=8053, host='146.201.212.214')

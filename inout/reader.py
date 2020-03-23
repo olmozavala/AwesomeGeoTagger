@@ -12,6 +12,10 @@ def match_files_dates(files, db):
     ts_id = db.index.values
 
     db[DataCols.cords_file.value] = ''
+
+    coords_file_pattern = F'wrfout_c15d.*'
+    coords_re = re.compile(coords_file_pattern)
+    coords_file = [x for x in files if len(coords_re.findall(x)) > 0][0]
     for i in ts_id:
         c_date_orig = db.loc[i][DataCols.time.value]
         c_date_orig = pd.to_datetime(c_date_orig)
@@ -22,16 +26,15 @@ def match_files_dates(files, db):
         c_day = c_date_fixed.day
 
         file_pattern = F'wrfout_c1h.*{c_year}-{c_month:02d}-{c_day:02d}.*'
-        coords_file_pattern = F'wrfout_c15d.*{c_year}*'
         file_re = re.compile(file_pattern)
-        coords_re = re.compile(coords_file_pattern)
         for c_file in files:
             c_file_name = os.path.basename(c_file)
             m = file_re.findall(c_file_name)
             if len(m) > 0:
                 db.at[i, DataCols.netcdf_file.value] = c_file
-                coords_file = [x for x in files if len(coords_re.findall(x)) > 0][0]
                 db.at[i, DataCols.cords_file.value] = coords_file
+                break
+
 
     newdb = db[db[DataCols.netcdf_file.value] != '']
     return newdb

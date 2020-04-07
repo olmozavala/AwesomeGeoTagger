@@ -1,41 +1,60 @@
 import os
 import re
 import pandas as pd
-from config.params import DataCols
+from config.params import DataCols, FileType
 from datetime import datetime, timedelta
+import time
+import numpy as np
 
-def read_all_files(input_folder):
-    all_files = [os.path.join(dp, f) for dp, dn, fn in os.walk(os.path.expanduser(input_folder)) for f in fn]
-    return all_files
+def read_all_files(input_folder, goes_input_folder):
+    all_files = np.array([os.path.join(dp, f) for dp, dn, fn in os.walk(os.path.expanduser(input_folder)) for f in fn])
+    all_files_goes = np.array([os.path.join(dp, f) for dp, dn, fn in os.walk(os.path.expanduser(goes_input_folder)) for f in fn])
+    all_files.sort()
+    all_files_goes.sort()
+    files_dic = {FileType.reanalisis: all_files,
+                 FileType.goes: all_files_goes}
+    return files_dic
 
 def match_files_dates(files, db):
-    ts_id = db.index.values
+    print("Matching files....")
+    t = time.time()
+    hurdat_dates = db.index.values
 
     db[DataCols.cords_file.value] = ''
 
+    reanalisis_files = files[FileType.reanalisis]
+    goes_files = files[FileType.goes]
+
     coords_file_pattern = F'wrfout_c15d.*'
     coords_re = re.compile(coords_file_pattern)
-    coords_file = [x for x in files if len(coords_re.findall(x)) > 0][0]
-    for i in ts_id:
-        c_date_orig = db.loc[i][DataCols.time.value]
-        c_date_orig = pd.to_datetime(c_date_orig)
+    coords_file = [x for x in files[FileType.reanalisis] if len(coords_re.findall(x)) > 0][0]
+    # Iterate over all the hurdat dates
+    for i in hurdat_dates:
+        c_date_orig = pd.to_datetime(db.loc[i][DataCols.time.value])
         # c_date_fixed = c_date_orig + timedelta(hours=-6)
         c_date_fixed = c_date_orig + timedelta(hours=0)
         c_year = c_date_fixed.year
         c_month = c_date_fixed.month
         c_day = c_date_fixed.day
+        c_hour = c_date_fixed.hour
 
-        file_pattern = F'wrfout_c1h.*{c_year}-{c_month:02d}-{c_day:02d}.*'
-        file_re = re.compile(file_pattern)
-        for c_file in files:
-            c_file_name = os.path.basename(c_file)
-            m = file_re.findall(c_file_name)
-            if len(m) > 0:
+        # ===== Finding corresponding reanalisis files ====
+        file_pattern = F'wrfout_c1h_d01_{c_year}-{c_month:02d}-{c_day:02d}'
+        for c_file in reanalisis_files:
+            if c_file.find(file_pattern) != -1:
                 db.at[i, DataCols.netcdf_file.value] = c_file
                 db.at[i, DataCols.cords_file.value] = coords_file
                 break
 
+        file_pattern = F'goes13_{c_year}-{c_month:02d}-{c_day:02d}_{c_hour:02d}'
+        for c_file in goes_files:
+            if c_file.find(file_pattern) != -1:
+                db.at[i, DataCols.goes_file.value] = c_file
+                break
+
+
     newdb = db[db[DataCols.netcdf_file.value] != '']
+    print(F"Done! took: { time.time() - t}")
     return newdb
 
 
@@ -50,6 +69,7 @@ def read_ts_db(file_name, bbox=None):
     print(df)
     df[DataCols.center.value] = df['lat'].astype('str') + ',' + df['lon'].astype('str')
     df[DataCols.netcdf_file.value] = ''
+    df[DataCols.goes_file.value] = ''
     if bbox is None:
         return df
     else:

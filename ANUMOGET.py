@@ -26,17 +26,24 @@ styles = {
 }
 
 config = get_config()
-input_folder = config[ANUMOGET.input_folder]
+input_folder_re = config[ANUMOGET.input_folder_reanalisis]
+input_folder_goes = config[ANUMOGET.input_folder_goes]
 ts_db_file_name = config[ANUMOGET.ts_db_file_name]
 output_folder = config[ANUMOGET.output_folder]
 
 print("Reading data....")
-files = np.array(read_all_files(input_folder))
-files.sort()
+files = read_all_files(input_folder_re, input_folder_goes)
 
 # TODO restrict to BBOX, so that we only get the TS on the area of interest
 BBOX = [4, -123.5, 38.5, -75]
 hurdat_db_all = read_ts_db(ts_db_file_name, BBOX)
+# ============= Code to save csv related with the dates =========
+# Saving the desired ts
+# hurdat_db_all.index.to_csv("/home/olmozavala/Dropbox/MyProjects/TROSTDIS_ECMWF/test_data/hurdat/DomainDates.csv",
+#                         index=None)
+# np_dates = hurdat_db_all[DataCols.time.value].apply(lambda x: x.strftime('%Y-%M-%d %H:%m:%S')).values
+# np.savetxt("/home/olmozavala/Dropbox/MyProjects/TROSTDIS_ECMWF/test_data/hurdat/DomainDates.csv",
+#             np_dates.astype(str), delimiter="'", fmt='%s')
 
 # Shuffle dates
 # Match dates to files

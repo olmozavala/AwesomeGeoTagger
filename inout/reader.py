@@ -35,12 +35,17 @@ def match_files_dates(files, db):
                 db.at[i, DataCols.cords_file.value] = coords_file
                 break
 
-
     newdb = db[db[DataCols.netcdf_file.value] != '']
     return newdb
 
 
 def read_ts_db(file_name, bbox=None):
+    """
+    Reads the Hurdat database, restricting the tropical storms by a bounding box.
+    :param file_name:
+    :param bbox:
+    :return:
+    """
     df = pd.read_csv(file_name, header=0, parse_dates=['time'])
     print(df)
     df[DataCols.center.value] = df['lat'].astype('str') + ',' + df['lon'].astype('str')

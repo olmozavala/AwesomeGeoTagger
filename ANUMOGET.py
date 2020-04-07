@@ -12,6 +12,8 @@ from dash.dependencies import Input, Output, State
 # https://dash.plot.ly/interactive-graphing
 # https://plot.ly/python-api-reference/
 
+# TESTING
+
 COLORS = ['r', 'g', 'b', 'y']
 date_format = '%Y-%m-%d'
 date_format_ext = '%Y-%m-%dT%H:%M:%S'
@@ -28,19 +30,18 @@ input_folder = config[ANUMOGET.input_folder]
 ts_db_file_name = config[ANUMOGET.ts_db_file_name]
 output_folder = config[ANUMOGET.output_folder]
 
-
 print("Reading data....")
 files = np.array(read_all_files(input_folder))
 files.sort()
 
 # TODO restrict to BBOX, so that we only get the TS on the area of interest
 BBOX = [4, -123.5, 38.5, -75]
-temp_db = read_ts_db(ts_db_file_name, BBOX)
+hurdat_db_all = read_ts_db(ts_db_file_name, BBOX)
 
 # Shuffle dates
 # Match dates to files
 # http://www.meteo.unican.es/wiki/cordexwrf/OutputVariables
-db = match_files_dates(files, temp_db)
+db = match_files_dates(files, hurdat_db_all)
 
 app = get_layout('Awesome NUmerical MOdel Tagger (ANUMOGET)', db)
 

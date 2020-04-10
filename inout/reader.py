@@ -30,6 +30,8 @@ def match_files_dates(files, db):
     coords_file = [x for x in files[FileType.reanalisis] if len(coords_re.findall(x)) > 0][0]
     # Iterate over all the hurdat dates
     for i in hurdat_dates:
+        if i % 500 == 0:
+            print(i)
         c_date_orig = pd.to_datetime(db.loc[i][DataCols.time.value])
         c_date_fixed = c_date_orig + timedelta(hours=0)
         c_year = c_date_fixed.year

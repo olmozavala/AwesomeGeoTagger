@@ -31,13 +31,13 @@ def get_layout(title, db):
         dbc.Row([
             dbc.Col([
                 dcc.Graph(
-                    id="id-map-mag",
+                    id="id-map-goes-c4",
                     figure={}
                 ),
             ], width=6),
             dbc.Col([
                 dcc.Graph(
-                    id="id-map-psfc",
+                    id="id-map-goes-c6",
                     figure={}
                 ),
             ], width=6),
@@ -50,6 +50,20 @@ def get_layout(title, db):
                     value=get_dates_dropdown(db)[0]['value']
                 ),
             ], width=6)
+        ]),
+        dbc.Row([
+            dbc.Col([
+                dcc.Graph(
+                    id="id-map-mag",
+                    figure={}
+                ),
+            ], width=6),
+            dbc.Col([
+                dcc.Graph(
+                    id="id-map-psfc",
+                    figure={}
+                ),
+            ], width=6),
         ]),
         dbc.Row([
             dbc.Col([

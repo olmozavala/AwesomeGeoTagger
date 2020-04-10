@@ -31,7 +31,6 @@ def match_files_dates(files, db):
     # Iterate over all the hurdat dates
     for i in hurdat_dates:
         c_date_orig = pd.to_datetime(db.loc[i][DataCols.time.value])
-        # c_date_fixed = c_date_orig + timedelta(hours=-6)
         c_date_fixed = c_date_orig + timedelta(hours=0)
         c_year = c_date_fixed.year
         c_month = c_date_fixed.month
@@ -47,10 +46,15 @@ def match_files_dates(files, db):
                 break
 
         file_pattern = F'goes13_{c_year}-{c_month:02d}-{c_day:02d}_{c_hour:02d}'
+        found = False
+        goes_temp_files = []
         for c_file in goes_files:
             if c_file.find(file_pattern) != -1:
-                db.at[i, DataCols.goes_file.value] = c_file
-                break
+                found = True
+                goes_temp_files.append(c_file)
+
+        if found:
+            db.at[i, DataCols.goes_file.value] = goes_temp_files
 
 
     newdb = db[db[DataCols.netcdf_file.value] != '']

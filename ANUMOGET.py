@@ -1,7 +1,7 @@
 from config.MainConfig import get_config
 from config.params import ANUMOGET, DataCols
 from layout.body import get_layout
-from proc import get_map, get_dates_dropdown
+from proc import get_map, get_goes_map, get_dates_dropdown
 
 from inout.reader import read_all_files, match_files_dates, read_ts_db
 from datetime import date, datetime, timedelta
@@ -53,27 +53,37 @@ db = match_files_dates(files, hurdat_db_all)
 app = get_layout('Awesome NUmerical MOdel Tagger (ANUMOGET)', db)
 
 @app.callback(
-    [Output('id-map-u', 'figure'),
+    [Output('id-map-goes-c4', 'figure'),
+     Output('id-map-goes-c6', 'figure'),
+     Output('id-map-u', 'figure'),
      Output('id-map-v', 'figure'),
      Output('id-map-mag', 'figure'),
      Output('id-map-psfc', 'figure'),
      Output('text_area', 'value')],
     [Input('dropdown', 'value'),
+     Input('id-map-goes-c4', 'selectedData'),
+     Input('id-map-goes-c6', 'selectedData'),
      Input('id-map-mag', 'selectedData'),
      Input('id-map-psfc', 'selectedData'),
      Input('id-map-u', 'selectedData'),
      Input('id-map-v', 'selectedData'),
      ],
-    [State('id-map-mag', 'figure'),
-     State('id-map-psfc', 'figure'),
-     State('id-map-u', 'figure'),
-     State('id-map-v', 'figure'),
+    [
+    State('id-map-goes-c4', 'figure'),
+    State('id-map-goes-c6', 'figure'),
+    State('id-map-mag', 'figure'),
+    State('id-map-psfc', 'figure'),
+    State('id-map-u', 'figure'),
+    State('id-map-v', 'figure'),
      ])
-def display_map(drop_value, selected_area_map1, selected_area_map2, selected_area_map3, selected_area_map4,
-                    map_state_map1, map_state_map2, map_state_map3, map_state_map4):
+def display_map(drop_value, selected_area_goes4, selected_area_goes6, selected_area_map1, selected_area_map2, selected_area_map3, selected_area_map4,
+                            map_state_goes4, map_state_goes6, map_state_map1, map_state_map2, map_state_map3, map_state_map4):
     if not(drop_value is None or drop_value == ''):
-        np_selected_area = np.array([selected_area_map1, selected_area_map2, selected_area_map3, selected_area_map4])
-        np_state = np.array([map_state_map1, map_state_map2, map_state_map3, map_state_map4])
+        np_selected_area = np.array([selected_area_goes4, selected_area_goes6,
+                                     selected_area_map1, selected_area_map2,
+                                     selected_area_map3, selected_area_map4])
+        np_state = np.array([map_state_goes4,  map_state_goes6, map_state_map1,
+                             map_state_map2, map_state_map3, map_state_map4])
         selection = [x is None for x in np_selected_area]
         all_none = np.all(selection)
         if not(all_none):
@@ -92,14 +102,16 @@ def display_map(drop_value, selected_area_map1, selected_area_map2, selected_are
             zoom = 3
 
         print(F'CENTER: {center}    ZOOOM: {zoom}')
+        map_fig_goes4, lats_lons = get_goes_map(drop_value, selected_area, db, 'C04', center=center, zoom=zoom)
+        map_fig_goes6, lats_lons = get_goes_map(drop_value, selected_area, db, 'C04', center=center, zoom=zoom)
         map_fig_u, lats_lons = get_map(drop_value, selected_area, db, 'Q2', center=center, zoom=zoom)
         map_fig_v, lats_lons = get_map(drop_value, selected_area, db, 'RAINC', center=center, zoom=zoom)
         map_fig_mag, lats_lons = get_map(drop_value, selected_area, db, 'UV-MAG', center=center, zoom=zoom)
         map_fig_psfc, lats_lons = get_map(drop_value, selected_area, db, 'PSFC', center=center, zoom=zoom)
         if all_none:
-            return map_fig_u, map_fig_v, map_fig_mag, map_fig_psfc, 'Please make a selection'
+            return map_fig_goes4, map_fig_goes6, map_fig_u, map_fig_v, map_fig_mag, map_fig_psfc, 'Please make a selection'
         else:
-            return map_fig_u, map_fig_v, map_fig_mag, map_fig_psfc, lats_lons
+            return map_fig_goes4, map_fig_goes6, map_fig_u, map_fig_v, map_fig_mag, map_fig_psfc, lats_lons
 
 @app.callback(
     [Output('dropdown', 'options'),

@@ -12,19 +12,6 @@ from dash.dependencies import Input, Output, State
 # https://dash.plot.ly/interactive-graphing
 # https://plot.ly/python-api-reference/
 
-# TESTING
-
-COLORS = ['r', 'g', 'b', 'y']
-date_format = '%Y-%m-%d'
-date_format_ext = '%Y-%m-%dT%H:%M:%S'
-
-styles = {
-    'pre': {
-        'border': 'thin lightgrey solid',
-        'overflowX': 'scroll'
-    }
-}
-
 config = get_config()
 input_folder_re = config[ANUMOGET.input_folder_reanalisis]
 input_folder_goes = config[ANUMOGET.input_folder_goes]
@@ -35,7 +22,6 @@ port = config[ANUMOGET.port]
 
 print("Reading data....")
 files = read_all_files(input_folder_re, input_folder_goes)
-
 # TODO restrict to BBOX, so that we only get the TS on the area of interest
 BBOX = [4, -123.5, 38.5, -75]
 hurdat_db_all = read_ts_db(ts_db_file_name, BBOX)
@@ -51,7 +37,6 @@ hurdat_db_all = read_ts_db(ts_db_file_name, BBOX)
 # Match dates to files
 # http://www.meteo.unican.es/wiki/cordexwrf/OutputVariables
 db = match_files_dates(files, hurdat_db_all)
-
 app = get_layout('Awesome NUmerical MOdel Tagger (ANUMOGET)', db)
 
 @app.callback(
@@ -133,4 +118,3 @@ if __name__ == '__main__':
     app.run_server(debug=True, port=port, host=ip)
     # app.run_server(debug=False, port=8053, host='146.201.212.214') # COAPS
     # app.run_server(debug=False, port=8051, host='0.0.0.0') # ZION
-

@@ -1,12 +1,12 @@
 import xarray as xr
-from colorcet import *
+import colorcet as cc
 import datashader.transfer_functions as tf
 from config.params import DataCols
 import numpy as np
 
 date_format_ext = '%Y-%m-%dT%H:%M:%S'
 
-def fill_data_and_fig(center_storm, selection, img, coordinates, center, zoom, field):
+def fill_data_and_fig(center_storm, selection, img, coordinates, center, zoom, field, storm_name):
 
     data = [
         dict(
@@ -23,8 +23,9 @@ def fill_data_and_fig(center_storm, selection, img, coordinates, center, zoom, f
             marker=dict(
                 color='red'
             ),
-            hovertemplate='Station: %{text} <extra></extra>'
-        )
+            # hovertemplate='Station: %{text} <extra></extra>'
+            hovertemplate = F'{storm_name}'
+    )
     ]
 
     lats_lons = ''
@@ -32,6 +33,9 @@ def fill_data_and_fig(center_storm, selection, img, coordinates, center, zoom, f
         all_locs = selection['lassoPoints']['mapbox']
         lats = [x[1] for x in all_locs]
         lons = [x[0] for x in all_locs]
+        # To 'circle' the lines
+        lats.append(all_locs[0][1])
+        lons.append(all_locs[0][0])
         # print(F'lats: {lats}, \n lons: {lons}')
         lats_lons = '\n'.join(F'{x[0]},{x[1]}' for x in all_locs)
         data.append(
@@ -40,6 +44,7 @@ def fill_data_and_fig(center_storm, selection, img, coordinates, center, zoom, f
             lon=lons,
             text=['text'],
             type="scattermapbox",
+            mode='lines',
             # https://plotly.com/python/scattermapbox/
             # fill="none", # none, toself, (only toself is working
             marker=dict(
@@ -72,10 +77,12 @@ def fill_data_and_fig(center_storm, selection, img, coordinates, center, zoom, f
                 pitch=0,
                 zoom=zoom,
             ),
-            height=600,
-            width=1000,
+            height=700,
             autosize=True,
-            title=field
+            title=field,
+            margin=dict(
+                l=10, r=10, t=30, b=20
+            )
         ))
 
     return figure, lats_lons
@@ -89,7 +96,6 @@ def get_goes_map(id, selection, db, field, center = [-94, 24], zoom=3):
     :return:
     """
     # print(selection)
-
     selected_files = db.loc[id][DataCols.goes_file.value]
     if selected_files != '':
         selected_files = np.array(selected_files)
@@ -97,7 +103,6 @@ def get_goes_map(id, selection, db, field, center = [-94, 24], zoom=3):
 
         xr_ds = xr.open_dataset(selected_file, decode_times=False)
         # print(agg.data_vars.values())
-
         # # agg is an xarray object, see http://xarray.pydata.org/en/stable/ for more details
         LAT = xr_ds.lat.values
         LON = xr_ds.lon.values
@@ -106,15 +111,12 @@ def get_goes_map(id, selection, db, field, center = [-94, 24], zoom=3):
                        [LON[-1], LAT[-1]],
                        [LON[0], LAT[-1]]]
 
-        # Just next to Dangriga in Belice
-        # coordinates = [[-88.20, 16.96],
-        #                [-88.21, 16.96],
-        #                [-88.21, 16.97],
-        #                [-88.20, 16.97]]
-
-        img = tf.shade(xr_ds[field][:,:], cmap=m_rainbow, alpha=100).to_pil()
+        # img = tf.shade(xr_ds[field][:,:], cmap=cc.m_rainbow, alpha=100).to_pil()
+        # img = tf.shade(xr_ds[field][:,:], cmap=cc.colorwheel, alpha=180).to_pil()
+        # img = tf.shade(xr_ds[field][:,:], cmap=cc.rainbow, alpha=180).to_pil()
+        img = tf.shade(xr_ds[field][:,:], cmap=cc.colorwheel, alpha=180).to_pil()
         center_storm = [db.loc[id]['lat'], db.loc[id]['lon']]
-        return fill_data_and_fig(center_storm, selection, img, coordinates, center, zoom, field)
+        return fill_data_and_fig(center_storm, selection, img, coordinates, center, zoom, field, db.loc[id]['name'])
     else:
      return dict(), []
 
@@ -167,10 +169,11 @@ def get_map(id, selection, db, field, center = [-94, 24], zoom=3):
 
     hour = int(db.loc[id][DataCols.time.value].strftime('%H'))
 
-    img = tf.shade(ds['displayed_var'][hour,:,:], cmap=rainbow, alpha=150).to_pil()
+    img = tf.shade(ds['displayed_var'][hour,:,:], cmap=cc.rainbow, alpha=150).to_pil()
 
     center_storm = [db.loc[id]['lat'], db.loc[id]['lon']]
-    return fill_data_and_fig(center_storm, selection, img, coordinates, center, zoom, field)
+    return fill_data_and_fig(center_storm, selection, img, coordinates, center, zoom, field, db.loc[id]['name'])
+
 
 def get_dates_dropdown(db):
     dropdown_opts = []

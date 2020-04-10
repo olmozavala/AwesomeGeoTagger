@@ -4,20 +4,19 @@ import dash_html_components as html
 import dash_bootstrap_components as dbc
 
 from proc import get_dates_dropdown
+# https://dash.plotly.com/external-resources
 
 def get_layout(title, db):
     navbar = dbc.NavbarSimple(
         children=[
-            dbc.NavItem(dbc.NavLink("Link", href="#")),
+            # dbc.NavItem(dbc.NavLink("Olmo Zavala Romero", href="https://olmozavala.com/")),
             dbc.DropdownMenu(
                 nav=True,
                 in_navbar=True,
-                label="Menu",
+                label="Authors",
                 children=[
-                    dbc.DropdownMenuItem("Temperature"),
-                    dbc.DropdownMenuItem("Salinity"),
-                    dbc.DropdownMenuItem(divider=True),
-                    dbc.DropdownMenuItem("Velocity"),
+                    dbc.DropdownMenuItem("Olmo Zavala", href="https://olmozavala.com/", external_link=True),
+                    # dbc.DropdownMenuItem(divider=True),
                 ],
             ),
         ],
@@ -27,6 +26,20 @@ def get_layout(title, db):
     )
 
     body = dbc.Container([
+        dbc.Row([
+            dbc.Col([
+                html.H4('Please select the tropical storm:')
+            ], width=3),
+            dbc.Col([
+                dcc.Dropdown(
+                    id='dropdown',
+                    options=get_dates_dropdown(db),
+                    value=get_dates_dropdown(db)[0]['value']
+                ),
+            ], width=6)
+        ],
+        className='justify-content-center'
+        ),
         # Global information
         dbc.Row([
             dbc.Col([
@@ -41,16 +54,9 @@ def get_layout(title, db):
                     figure={}
                 ),
             ], width=6),
-        ]),
-        dbc.Row([
-            dbc.Col([
-                dcc.Dropdown(
-                    id='dropdown',
-                    options=get_dates_dropdown(db),
-                    value=get_dates_dropdown(db)[0]['value']
-                ),
-            ], width=6)
-        ]),
+        ],
+            className="bt-row"
+        ),
         dbc.Row([
             dbc.Col([
                 dcc.Graph(
@@ -92,7 +98,11 @@ def get_layout(title, db):
             ])
         ], fluid=True)
 
-    app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+    # app = dash.Dash(__name__, external_stylesheets=[dbc.themes.FLATLY],
+    app = dash.Dash(__name__, external_stylesheets=[dbc.themes.SUPERHERO],
+    # app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP],
+                    assets_folder='css')
+    app.scripts.config.serve_locally = False
     app.layout = html.Div([navbar, body])
 
     return app

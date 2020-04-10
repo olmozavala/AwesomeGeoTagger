@@ -63,7 +63,7 @@ def match_files_dates(files, db):
                     found = True
                     goes_temp_files.append(c_file)
 
-            # Forcing to find GOES files
+            # Forcing to find GOES files. If there is no GOES, then we don't add that TS
             if found:
                 db.at[i, DataCols.goes_file.value] = goes_temp_files
 
@@ -73,7 +73,6 @@ def match_files_dates(files, db):
                         db.at[i, DataCols.netcdf_file.value] = c_file
                         db.at[i, DataCols.cords_file.value] = coords_file
                         break
-
 
 
 

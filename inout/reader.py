@@ -28,6 +28,17 @@ def match_files_dates(files, db):
     coords_file_pattern = F'wrfout_c15d.*'
     coords_re = re.compile(coords_file_pattern)
     coords_file = [x for x in files[FileType.reanalisis] if len(coords_re.findall(x)) > 0][0]
+
+    print(F"Sizes HURDAT: {len(hurdat_dates)} Reanalisis: {len(reanalisis_files)}   GOES: {len(goes_files)}")
+
+    reanalisis_years = [int(os.path.basename(x).split('_')[3].split('-')[0]) for x in reanalisis_files]
+    min_year_reanalisis = np.amin(reanalisis_years)
+    max_year_reanalisis = np.amax(reanalisis_years)
+
+    goes_years = [int(os.path.basename(x).split('_')[1].split('-')[0]) for x in goes_files]
+    min_year_goes = np.amin(goes_years)
+    max_year_goes = np.amax(goes_years)
+
     # Iterate over all the hurdat dates
     for i in hurdat_dates:
         if i % 500 == 0:
@@ -40,20 +51,22 @@ def match_files_dates(files, db):
         c_hour = c_date_fixed.hour
 
         # ===== Finding corresponding reanalisis files ====
-        file_pattern = F'wrfout_c1h_d01_{c_year}-{c_month:02d}-{c_day:02d}'
-        for c_file in reanalisis_files:
-            if c_file.find(file_pattern) != -1:
-                db.at[i, DataCols.netcdf_file.value] = c_file
-                db.at[i, DataCols.cords_file.value] = coords_file
-                break
+        if min_year_reanalisis <= c_year <= max_year_reanalisis:
+            file_pattern = F'wrfout_c1h_d01_{c_year}-{c_month:02d}-{c_day:02d}'
+            for c_file in reanalisis_files:
+                if c_file.find(file_pattern) != -1:
+                    db.at[i, DataCols.netcdf_file.value] = c_file
+                    db.at[i, DataCols.cords_file.value] = coords_file
+                    break
 
-        file_pattern = F'goes13_{c_year}-{c_month:02d}-{c_day:02d}_{c_hour:02d}'
         found = False
-        goes_temp_files = []
-        for c_file in goes_files:
-            if c_file.find(file_pattern) != -1:
-                found = True
-                goes_temp_files.append(c_file)
+        if min_year_goes <= c_year <= max_year_goes:
+            file_pattern = F'goes13_{c_year}-{c_month:02d}-{c_day:02d}_{c_hour:02d}'
+            goes_temp_files = []
+            for c_file in goes_files:
+                if c_file.find(file_pattern) != -1:
+                    found = True
+                    goes_temp_files.append(c_file)
 
         if found:
             db.at[i, DataCols.goes_file.value] = goes_temp_files

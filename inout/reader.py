@@ -7,7 +7,7 @@ import time
 import numpy as np
 
 def read_all_files(input_folder, goes_input_folder):
-    all_files = np.array([os.path.join(dp, f) for dp, dn, fn in os.walk(os.path.expanduser(input_folder)) for f in fn])
+    all_files = np.array([os.path.join(dp, f) for dp, dn, fn in os.walk(os.path.expanduser(input_folder)) for f in fn if f[0:6] == 'wrfout'])
     all_files_goes = np.array([os.path.join(dp, f) for dp, dn, fn in os.walk(os.path.expanduser(goes_input_folder)) for f in fn])
     all_files.sort()
     all_files_goes.sort()
@@ -31,7 +31,9 @@ def match_files_dates(files, db):
 
     print(F"Sizes HURDAT: {len(hurdat_dates)} Reanalisis: {len(reanalisis_files)}   GOES: {len(goes_files)}")
 
-    reanalisis_years = [int(os.path.basename(x).split('_')[3].split('-')[0]) for x in reanalisis_files]
+    reanalisis_years = [int(os.path.basename(x).split('_')[3].split('-')[0]) for x in reanalisis_files
+                        if os.path.basename(x).split('_')[3].split('-')[0][0] != 'd']
+
     min_year_reanalisis = np.amin(reanalisis_years)
     max_year_reanalisis = np.amax(reanalisis_years)
 
@@ -51,25 +53,28 @@ def match_files_dates(files, db):
         c_hour = c_date_fixed.hour
 
         # ===== Finding corresponding reanalisis files ====
-        if min_year_reanalisis <= c_year <= max_year_reanalisis:
-            file_pattern = F'wrfout_c1h_d01_{c_year}-{c_month:02d}-{c_day:02d}'
-            for c_file in reanalisis_files:
-                if c_file.find(file_pattern) != -1:
-                    db.at[i, DataCols.netcdf_file.value] = c_file
-                    db.at[i, DataCols.cords_file.value] = coords_file
-                    break
-
-        found = False
-        if min_year_goes <= c_year <= max_year_goes:
+        if (min_year_reanalisis <= c_year <= max_year_reanalisis) and (min_year_goes <= c_year <= max_year_goes):
+            found = False
             file_pattern = F'goes13_{c_year}-{c_month:02d}-{c_day:02d}_{c_hour:02d}'
             goes_temp_files = []
+
             for c_file in goes_files:
                 if c_file.find(file_pattern) != -1:
                     found = True
                     goes_temp_files.append(c_file)
 
-        if found:
-            db.at[i, DataCols.goes_file.value] = goes_temp_files
+            # Forcing to find GOES files
+            if found:
+                db.at[i, DataCols.goes_file.value] = goes_temp_files
+
+                file_pattern = F'wrfout_c1h_d01_{c_year}-{c_month:02d}-{c_day:02d}'
+                for c_file in reanalisis_files:
+                    if c_file.find(file_pattern) != -1:
+                        db.at[i, DataCols.netcdf_file.value] = c_file
+                        db.at[i, DataCols.cords_file.value] = coords_file
+                        break
+
+
 
 
     newdb = db[db[DataCols.netcdf_file.value] != '']

@@ -129,4 +129,6 @@ def save_label(n_clicks, lats_lons):
 if __name__ == '__main__':
     # app.run_server(debug=False, port=8053, host='132.248.8.98:8053')
     app.run_server(debug=True, port=8051)
-    # app.run_server(debug=False, port=8053, host='146.201.212.214')
+    # app.run_server(debug=False, port=8053, host='146.201.212.214') # COAPS
+    # app.run_server(debug=False, port=8051, host='0.0.0.0') # ZION
+

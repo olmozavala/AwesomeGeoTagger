@@ -7,6 +7,8 @@ class ANUMOGET(Enum):
     ts_db_file_name = 5  # File name with the tropical storm database
     output_imgs_folder = 3  # Where to output temporal images
     display_imgs = 4  # Bool, indicates if the images should be displayed
+    port = 11 # Which port does the server runs
+    ip = 12 # Which ip does the server runs
 
 class DataCols(Enum):
     category = 'category'

@@ -30,6 +30,8 @@ input_folder_re = config[ANUMOGET.input_folder_reanalisis]
 input_folder_goes = config[ANUMOGET.input_folder_goes]
 ts_db_file_name = config[ANUMOGET.ts_db_file_name]
 output_folder = config[ANUMOGET.output_folder]
+ip = config[ANUMOGET.ip]
+port = config[ANUMOGET.port]
 
 print("Reading data....")
 files = read_all_files(input_folder_re, input_folder_goes)
@@ -128,7 +130,7 @@ def save_label(n_clicks, lats_lons):
 
 if __name__ == '__main__':
     # app.run_server(debug=False, port=8053, host='132.248.8.98:8053')
-    app.run_server(debug=True, port=8051)
+    app.run_server(debug=True, port=port, host=ip)
     # app.run_server(debug=False, port=8053, host='146.201.212.214') # COAPS
     # app.run_server(debug=False, port=8051, host='0.0.0.0') # ZION
 

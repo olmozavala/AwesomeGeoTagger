@@ -1,12 +1,14 @@
 import xarray as xr
 import colorcet as cc
 import datashader.transfer_functions as tf
-from config.params import DataCols
+from config.params import DataCols, FileType
 import numpy as np
+import os
+from datetime import date, datetime
 
 date_format_ext = '%Y-%m-%dT%H:%M:%S'
 
-def fill_data_and_fig(center_storm, selection, img, coordinates, center, zoom, field, storm_name):
+def fill_data_and_fig(center_storm, selection, img, coordinates, center, zoom, title, storm_name):
 
     data = [
         dict(
@@ -77,15 +79,74 @@ def fill_data_and_fig(center_storm, selection, img, coordinates, center, zoom, f
                 pitch=0,
                 zoom=zoom,
             ),
-            height=700,
             autosize=True,
-            title=field,
+            title=title,
             margin=dict(
                 l=10, r=10, t=30, b=20
             )
         ))
 
     return figure, lats_lons
+
+
+def get_ecmwf_map(id, selection, db, field, center = [-94, 24], zoom=3):
+    """
+    This function will generate the proper dash map with the selected
+    date and, if the user has already draw something, it will add the points.
+    :param selected_file:
+    :param selection:
+    :return:
+    """
+    # print(selection)
+    selected_files = db.loc[id][DataCols.ecmwf_file.value]
+    if selected_files != '':
+        selected_files = np.array(selected_files)
+
+        # Here we need to add the other fields like U10, V10 and decide which file to read
+        field_type = FileType.twod
+        if field in ['u10', 'v10', 't2m', 'msl', 'sp']:
+            field_type = FileType.twod
+            file_var = 'sfc'
+        if field in ['u', 'v', 'd', 'pv', 'vo']:
+            field_type = FileType.threed
+            file_var = 'pres'
+
+        selected_file = selected_files[[x.find(file_var) != -1 for x in selected_files]][0]
+
+        xr_ds = xr.open_dataset(selected_file, decode_times=False)
+        # print(agg.data_vars.values())
+        # # agg is an xarray object, see http://xarray.pydata.org/en/stable/ for more details
+        LAT = xr_ds.latitude.values
+        LON = xr_ds.longitude.values
+        coordinates = [[LON[0], LAT[0]],
+                       [LON[-1], LAT[0]],
+                       [LON[-1], LAT[-1]],
+                       [LON[0], LAT[-1]]]
+
+        # TODO here we need to decide the closest hour
+        cdate_ts = db.loc[id]['time']
+        start_date_str = os.path.basename(selected_file).split('_')[0].split('-')
+        start_date = datetime(int(start_date_str[0]), int(start_date_str[1]), int(start_date_str[2]))
+        time_diff = cdate_ts - start_date
+        dd = time_diff.days
+        t = int(4 * dd + (cdate_ts.hour/6)) # We increase the number of days in difference
+
+        # img = tf.shade(xr_ds[field][:,:], cmap=cc.m_rainbow, alpha=100).to_pil()
+        # img = tf.shade(xr_ds[field][:,:], cmap=cc.colorwheel, alpha=180).to_pil()
+        # img = tf.shade(xr_ds[field][:,:], cmap=cc.rainbow, alpha=180).to_pil()
+        if field_type == FileType.twod:
+            img = tf.shade(xr_ds[field][t,:,:], cmap=cc.colorwheel, alpha=180).to_pil()
+        elif field_type == FileType.threed:
+            img = tf.shade(xr_ds[field][t,20,:,:], cmap=cc.colorwheel, alpha=180).to_pil()
+
+        center_storm = [db.loc[id]['lat'], db.loc[id]['lon']]
+        # title = F'ECMWF {field} {os.path.basename(selected_file)}  File Index:{t}'
+        title = F'ECMWF {field}'
+        return fill_data_and_fig(center_storm, selection, img, coordinates, center, zoom,
+                                 title, db.loc[id]['name'])
+    else:
+     return dict(), []
+
 
 def get_goes_map(id, selection, db, field, center = [-94, 24], zoom=3):
     """
@@ -116,7 +177,8 @@ def get_goes_map(id, selection, db, field, center = [-94, 24], zoom=3):
         # img = tf.shade(xr_ds[field][:,:], cmap=cc.rainbow, alpha=180).to_pil()
         img = tf.shade(xr_ds[field][:,:], cmap=cc.colorwheel, alpha=180).to_pil()
         center_storm = [db.loc[id]['lat'], db.loc[id]['lon']]
-        return fill_data_and_fig(center_storm, selection, img, coordinates, center, zoom, field, db.loc[id]['name'])
+        title = F"GOES {field}"
+        return fill_data_and_fig(center_storm, selection, img, coordinates, center, zoom, title, db.loc[id]['name'])
     else:
      return dict(), []
 
@@ -170,9 +232,9 @@ def get_map(id, selection, db, field, center = [-94, 24], zoom=3):
     hour = int(db.loc[id][DataCols.time.value].strftime('%H'))
 
     img = tf.shade(ds['displayed_var'][hour,:,:], cmap=cc.rainbow, alpha=150).to_pil()
-
+    title = F'UNAM {field}'
     center_storm = [db.loc[id]['lat'], db.loc[id]['lon']]
-    return fill_data_and_fig(center_storm, selection, img, coordinates, center, zoom, field, db.loc[id]['name'])
+    return fill_data_and_fig(center_storm, selection, img, coordinates, center, zoom, title, db.loc[id]['name'])
 
 
 def get_dates_dropdown(db):

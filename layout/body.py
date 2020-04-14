@@ -2,9 +2,32 @@ import dash
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_bootstrap_components as dbc
+import numpy as np
 
 from proc import get_dates_dropdown
 # https://dash.plotly.com/external-resources
+
+def get_row_map( map_types, fields):
+    tot_rows = np.amax([len(x) for x in fields])
+    print(tot_rows)
+    all_rows = []
+    for c_row in np.arange(tot_rows):
+        cols = []
+        for i, map_type in enumerate(map_types):
+            if len(fields[i]) > c_row:
+                field = fields[i][c_row]
+                cols.append(
+                    dbc.Col([
+                        dcc.Graph(
+                            id=F"id-map-{map_type}-{field}",
+                            figure={}
+                        ),
+                    ], width=4))
+            else:
+                cols.append(
+                    dbc.Col([], width=4))
+        all_rows.append(dbc.Row(cols))
+    return dbc.Row(dbc.Col(all_rows, width=12, id='map_container'))
 
 def get_layout(title, db):
     navbar = dbc.NavbarSimple(
@@ -28,74 +51,28 @@ def get_layout(title, db):
     body = dbc.Container([
         dbc.Row([
             dbc.Col([
-                html.H4('Please select the tropical storm:')
-            ], width=3),
+                html.H4('Select the tropical storm:')
+            ], width=2),
             dbc.Col([
                 dcc.Dropdown(
                     id='dropdown',
                     options=get_dates_dropdown(db),
                     value=get_dates_dropdown(db)[0]['value']
                 ),
-            ], width=6)
-        ],
-        className='justify-content-center'
-        ),
-        # Global information
-        dbc.Row([
-            dbc.Col([
-                dcc.Graph(
-                    id="id-map-goes-c4",
-                    figure={}
-                ),
-            ], width=6),
-            dbc.Col([
-                dcc.Graph(
-                    id="id-map-goes-c6",
-                    figure={}
-                ),
-            ], width=6),
-        ],
-            className="bt-row"
-        ),
-        dbc.Row([
-            dbc.Col([
-                dcc.Graph(
-                    id="id-map-mag",
-                    figure={}
-                ),
-            ], width=6),
-            dbc.Col([
-                dcc.Graph(
-                    id="id-map-psfc",
-                    figure={}
-                ),
-            ], width=6),
-        ]),
-        dbc.Row([
-            dbc.Col([
-                dcc.Graph(
-                    id="id-map-u",
-                    figure={}
-                ),
-            ], width=6),
-            dbc.Col([
-                dcc.Graph(
-                    id="id-map-v",
-                    figure={}
-                ),
-            ], width=6)
-        ]),
-        dbc.Row([
+            ], width=4),
             dbc.Col([
                 dbc.Textarea(
                     id='text_area',
-                    value='Please make a selection'
+                    value='Make a selection with the Lasso tool'
                 )
-                ], width=10),
+            ], width=4),
             dbc.Col([
                 dbc.Button('Save', id='button')
-                ], width=2)
-            ])
+            ], width=2)
+        ], className='justify-content-center'),
+        # Global information
+        get_row_map(['goes', 'ecmwf', 'unam'],
+                    [['c4','c6'], ['pres', 'sfc'], ['mag', 'psfc', 'u', 'v']]),
         ], fluid=True)
 
     # app = dash.Dash(__name__, external_stylesheets=[dbc.themes.FLATLY],

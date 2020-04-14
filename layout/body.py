@@ -39,6 +39,9 @@ def get_layout(title, db):
                 label="Authors",
                 children=[
                     dbc.DropdownMenuItem("Olmo Zavala", href="https://olmozavala.com/", external_link=True),
+                    dbc.DropdownMenuItem("Maria Elena Osorio Tai", href="http://132.248.139.119/~tai/", external_link=True),
+                    dbc.DropdownMenuItem("Jorge Eduardo Velasco Zavala", href="https://github.com/jorgeev/", external_link=True),
+                    dbc.DropdownMenuItem("Raul De La Rosa", href="", external_link=True),
                     # dbc.DropdownMenuItem(divider=True),
                 ],
             ),

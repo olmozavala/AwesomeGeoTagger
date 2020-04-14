@@ -134,10 +134,11 @@ def get_ecmwf_map(id, selection, db, field, center = [-94, 24], zoom=3):
         # img = tf.shade(xr_ds[field][:,:], cmap=cc.m_rainbow, alpha=100).to_pil()
         # img = tf.shade(xr_ds[field][:,:], cmap=cc.colorwheel, alpha=180).to_pil()
         # img = tf.shade(xr_ds[field][:,:], cmap=cc.rainbow, alpha=180).to_pil()
+        cmap = cc.CET_D13
         if field_type == FileType.twod:
-            img = tf.shade(xr_ds[field][t,:,:], cmap=cc.colorwheel, alpha=180).to_pil()
+            img = tf.shade(xr_ds[field][t,:,:], cmap=cmap, alpha=180).to_pil()
         elif field_type == FileType.threed:
-            img = tf.shade(xr_ds[field][t,20,:,:], cmap=cc.colorwheel, alpha=180).to_pil()
+            img = tf.shade(xr_ds[field][t,20,:,:], cmap=cmap, alpha=180).to_pil()
 
         center_storm = [db.loc[id]['lat'], db.loc[id]['lon']]
         # title = F'ECMWF {field} {os.path.basename(selected_file)}  File Index:{t}'
@@ -175,7 +176,7 @@ def get_goes_map(id, selection, db, field, center = [-94, 24], zoom=3):
         # img = tf.shade(xr_ds[field][:,:], cmap=cc.m_rainbow, alpha=100).to_pil()
         # img = tf.shade(xr_ds[field][:,:], cmap=cc.colorwheel, alpha=180).to_pil()
         # img = tf.shade(xr_ds[field][:,:], cmap=cc.rainbow, alpha=180).to_pil()
-        img = tf.shade(xr_ds[field][:,:], cmap=cc.colorwheel, alpha=180).to_pil()
+        img = tf.shade(xr_ds[field][:,:], cmap=list(reversed(cc.CET_D1A)), alpha=180).to_pil()
         center_storm = [db.loc[id]['lat'], db.loc[id]['lon']]
         title = F"GOES {field}"
         return fill_data_and_fig(center_storm, selection, img, coordinates, center, zoom, title, db.loc[id]['name'])

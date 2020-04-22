@@ -3,7 +3,7 @@ ANUMOGET
 ANUMOGET, the Awesome NUmerical MOdel GEo Tagger, is a program
 that facilitates the generation of masks from geo data. It is currently 
 used to label tropical storms from the HURDAT database merged
-with outputs from a reanalisis using WRF.
+with outputs from ECMWF and a regional WRF reanalisis.
 
 Install 
 =======
